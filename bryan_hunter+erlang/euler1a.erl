@@ -1,4 +1,4 @@
--module(euler1).
+-module(euler1a).
 
 -export([solve/0]).
 
