@@ -54,7 +54,6 @@ defmodule PrimeAgent do
 
   defp next_primes(last) do
     primes = Stream.iterate(last + 2, &(&1 + 2))
-    |> Stream.drop_while(&(!is_prime?(&1)))
     |> Stream.take(10)
     |> Enum.map(&async_prime_check/1)
     |> Enum.map(&(Task.await(&1, 500000)))
