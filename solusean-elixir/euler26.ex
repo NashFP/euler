@@ -36,9 +36,9 @@ defmodule PrimeAgent do
   def prime_stream do
     Stream.unfold(Enum.reverse(known_primes), fn x ->
       case x do
-        [next|[]] -> next_primes(next)
+        [next|[]] -> get_next_primes(next)
         [next|others] -> {next, others}
-        _ -> next_primes(x)
+        _ -> get_next_primes(x)
       end
     end)
   end
@@ -52,18 +52,24 @@ defmodule PrimeAgent do
 
   defp async_prime_check(n), do: Task.async(fn -> n_if_prime(n) end)
 
+  defp get_next_primes(last) do
+    [head|rest] = next_primes(last)
+    {head, rest}
+  end
+
   defp next_primes(last) do
     primes = Stream.iterate(last + 2, &(&1 + 2))
-    |> Stream.take(10)
+    |> Enum.take(10)
     |> Enum.map(&async_prime_check/1)
-    |> Enum.map(&(Task.await(&1, 500000)))
+    |> Enum.map(&Task.await/1)
     |> Enum.filter(&(&1))
     |> Enum.sort(&(&1 < &2))
 
     Enum.each(primes, &(Agent.update(@name, fn c -> [&1|c] end)))
 
     case primes do
-      [next, rest] -> {next, rest}
+      [next|[]] -> [next|next_primes(last + 20)]
+      [next|rest] -> primes
       _ -> next_primes(last + 20)
     end
   end
