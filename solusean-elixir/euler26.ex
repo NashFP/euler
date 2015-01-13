@@ -28,7 +28,7 @@ defmodule PrimeAgent do
     end
   end
 
-  defp known_primes, do: Agent.get(@name, &(&1), 500000)
+  defp known_primes, do: Agent.get(@name, &(&1))
 
   def primes(func) when is_function(func), do: prime_stream |> Enum.take_while(func)
   def primes(n) when is_number(n), do: primes(&(n >= &1))
@@ -37,7 +37,7 @@ defmodule PrimeAgent do
     Stream.unfold(Enum.reverse(known_primes), fn x ->
       case x do
         [next|[]] -> get_next_primes(next)
-        [next|others] -> {next, others}
+        [next|rest] -> {next, rest}
         _ -> get_next_primes(x)
       end
     end)
@@ -53,13 +53,13 @@ defmodule PrimeAgent do
   defp async_prime_check(n), do: Task.async(fn -> n_if_prime(n) end)
 
   defp get_next_primes(last) do
-    [head|rest] = next_primes(last)
-    {head, rest}
+    [next|rest] = next_primes(last)
+    {next, rest}
   end
 
   defp next_primes(last) do
     primes = Stream.iterate(last + 2, &(&1 + 2))
-    |> Enum.take(10)
+    |> Stream.take(10)
     |> Enum.map(&async_prime_check/1)
     |> Enum.map(&Task.await/1)
     |> Enum.filter(&(&1))
@@ -142,7 +142,7 @@ end
 
 defmodule Euler26 do
   require Math
-  def solve(d) do 
+  def solve(d \\ 1000) do 
     {largest, _} = 1..d 
     |> Enum.map(&({&1, Math.multiplicative_order(10, &1)}))
     |> Enum.filter(fn {_, m} -> m end) 
@@ -152,4 +152,4 @@ defmodule Euler26 do
 end
 
 Math.start_link
-Euler26.solve(1000)
+Euler26.solve
