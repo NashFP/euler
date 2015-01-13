@@ -22,10 +22,7 @@ defmodule PrimeAgent do
   def is_prime?(n) when n < 2, do: false
   def is_prime?(n) do
     [{f, _} | _] = factor(n)
-    cond do
-      f == n -> true
-      true -> false
-    end
+    f == n
   end
 
   defp known_primes, do: Agent.get(@name, &(&1))
